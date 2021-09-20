@@ -17,6 +17,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+// Version 20210920
+
 namespace Preise_EK_VK
 {
     public partial class Form1 : Form
