@@ -17,8 +17,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-//Version 20210920
-//Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
+
+//20210920 - Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
 
 
 namespace Preise_EK_VK
