@@ -17,8 +17,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-// Version 20210920 - 14:34 Uhr
+// Version 20210921 - 14:47 Uhr
 // 20210920 - Change XYZ
+// 20210921 - Change ABC
 
 namespace Preise_EK_VK
 {
