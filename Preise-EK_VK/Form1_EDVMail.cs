@@ -17,7 +17,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-// Version 20210920 - 14:32 Uhr
+// Version 20210920 - 14:34 Uhr
 
 namespace Preise_EK_VK
 {
