@@ -17,9 +17,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-// Version 20210921 - 14:47 Uhr
-// 20210920 - Change XYZ
-// 20210921 - Change ABC
+//Version 20210920
+//Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
+
 
 namespace Preise_EK_VK
 {
