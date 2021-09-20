@@ -110,7 +110,7 @@ namespace Preise_EK_VK
                     mailBody += "</tr>";
                 }
 
-                //Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
+                //20210920 - Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
                 if (dataGridView1.RowCount > 1)
                 {
                     mailBody += "</table>";
