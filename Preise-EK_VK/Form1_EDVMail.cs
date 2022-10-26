@@ -32,6 +32,7 @@ namespace Preise_EK_VK
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //Connection öffenen
             var conn = new OdbcConnection();
             conn.ConnectionString =
                 "DSN=Riedgruppe_32;" +
@@ -39,17 +40,21 @@ namespace Preise_EK_VK
                 "PWD=masterkey;";
             conn.Open();
 
+            
+            //Einkaufspreis GDI in Bestellung neu hinterlegt - prüfen
             ArrayList myArrayList = new ArrayList();
-            myArrayList.Add("SELECT T2.ARTIKELNR, Max(T2.MATERIAL) As VK_Preis, T3.EK_Preis "
+            myArrayList.Add("SELECT T2.ARTIKELNR, ARTIKEL.Suchname, Max(T2.MATERIAL) As VK_Preis, T3.EK_Preis "
             + "From PREISE As T2 "
             + "Inner Join ( SELECT ARTIKELNR, Max(MATERIAL) As EK_Preis "
             + "From PREISE "
-            + "WHERE PREISLST = 0  "                           
-            + "GROUP BY ARTIKELNR ) As T3 "                            
+            + "WHERE PREISLST = 0  "
+            + "GROUP BY ARTIKELNR ) As T3 "
             + "ON T2.ARTIKELNR = T3.ARTIKELNR "
-            + "Where T2.PREISLST = 1 "                                                         
-            + "GROUP BY T2.ARTIKELNR, T3.EK_Preis "
-            + "HAVING Max(T2.MATERIAL) < EK_Preis");
+            + "INNER JOIN Artikel "
+            + "ON T2.ARTIKELNR = ARTIKEL.ARTIKELNR "
+            + "Where T2.PREISLST = 1 "
+            + "GROUP BY T2.ARTIKELNR, T3.EK_Preis, ARTIKEL.Suchname "
+            + "HAVING Max(T2.MATERIAL) < T3.EK_Preis;");
             ////String Objekt - 
             object[] myStringArray = myArrayList.ToArray();
             string strSQL = myStringArray[0].ToString();
@@ -72,6 +77,55 @@ namespace Preise_EK_VK
             dataTable.Load(reader);
             dataGridView1.DataSource = dataTable;
             //conn.Close();
+            //
+
+            //Datum für SQL Abfrage
+            //DateTime dt = new DateTime();
+            DateTime dt = DateTime.Now;
+            dt = dt.AddDays(-5);
+            String sDatum =dt.ToString();
+            
+
+            //Einkaufspreis GDI in Rechnung prüfen
+            ArrayList myArrayList2 = new ArrayList();
+            myArrayList2.Add("SELECT T2.ARTIKELNR, ARTIKEL.Suchname, Max(T2.MATERIAL) As VK_Preis, T3.EK_Preis "
+            + "From PREISE As T2 "
+            + "Inner Join (SELECT ARTIKELNR, Max(MATERIAL) As EK_Preis "
+            + "From PREISE "
+            + "WHERE PREISLST = 0  "
+            + "GROUP BY ARTIKELNR ) As T3 "
+            + "ON T2.ARTIKELNR = T3.ARTIKELNR "            
+            + "INNER JOIN (SELECT ARTIKELNR From BELEGPOS WHERE BELEGTYP = 'E' AND BELEGART = 'RE' "
+            + "AND  CREATEDATUM >= '" + sDatum + "') AS BPOS " 
+            + "On T2.ARTIKELNR = BPOS.ARTIKELNR "
+            + "INNER JOIN Artikel "
+            + "ON T2.ARTIKELNR = ARTIKEL.ARTIKELNR "
+            + "Where T2.PREISLST = 1 "
+            + "GROUP BY T2.ARTIKELNR, T3.EK_Preis, ARTIKEL.Suchname "
+            + "HAVING Max(T2.MATERIAL) < T3.EK_Preis;");
+
+            ////String Objekt - 
+            object[] myStringArray2 = myArrayList2.ToArray();
+            string strSQL2 = myStringArray2[0].ToString();
+            for (int i = 1; i <= myStringArray2.Length; i++)
+            {
+                //textBox2.Text = myStringArray[i - 1].ToString();
+            }
+
+            OdbcCommand cmd2 = new OdbcCommand(strSQL2, conn);
+            OdbcDataReader readerTest2 = cmd2.ExecuteReader();
+            int Count2 = 0;
+            while (readerTest2.Read())
+            {
+                Count2 += 1;
+            }
+            readerTest2.Close();
+
+            OdbcDataReader reader2 = cmd2.ExecuteReader(); //2.Reader für Grid wird in Table geladen
+            DataTable dataTable2 = new DataTable();
+            dataTable2.Load(reader2);
+            dataGridView2.DataSource = dataTable2;
+
 
             try
             {
@@ -79,77 +133,116 @@ namespace Preise_EK_VK
                 MailMessage Email = new MailMessage();
                 //lager@riedgruppe-ost.de
                 MailAddress Sender = new MailAddress("lager@riedgruppe-ost.de");
-                // Absender einstellen 
+                //Absender einstellen 
                 Email.From = Sender;
-                // Empfänger hinzufügen
-                Email.To.Add("lager@riedgruppe-ost.de");
-                // Betreff hinzufügen
-                Email.Subject = "VK Preis anpassen";
-                // HTML Ansicht
+                //Betreff hinzufügen
+                Email.Subject = "GDI - VK EK Preis anpassen";
+                //HTML Ansicht
                 Email.IsBodyHtml = true;
-                // Nachrichtentext hinzufügen  
-                string mailBody = "";
-                //mailBody += @"\\wbvro-lager01\GDI\Mindestbestand_CSV";
-                mailBody += "<table width='100%' style='border:Solid 1px Black;'>";
-                // Column headers
-                string columnsHeader = "";
-                for (int i = 0; i < dataGridView1.Columns.Count; i++)
-                {
-                    columnsHeader += "<td>" + dataGridView1.Columns[i].Name + "</td>";
-                }
-                mailBody += columnsHeader + "</td>";
+                //MailBody
+                string mailBody = "";                
 
-                // Zeilen:
-                foreach (DataGridViewRow row in dataGridView1.Rows)
+                // Empfänger hinzufügen - EDV immer wegeb Check ob Mail kommt
+                Email.To.Add("edv@riedgruppe-ost.de");
+
+                if (dataGridView2.RowCount > 1)
                 {
-                    mailBody += "<tr>";
-                    foreach (DataGridViewCell cell in row.Cells)
+                    //Empfänger hinzufügen - Wer noch außer EDV? 
+                    Email.To.Add("technik@riedgruppe-ost.de");
+                    //Email.To.Add("chiara.termini@riedgruppe-ost.de");
+
+                    //Nachrichtentext hinzufügen  
+                    mailBody = "Preis anpassen für in RG übernomme Artikel:";
+                    //string mailBody = "";
+                    //mailBody += @"\\wbvro-lager01\GDI\Mindestbestand_CSV";
+                    mailBody += "<table width='100%' style='border:Solid 1px Black;'>";
+                    // Column headers
+                    string columnsHeader = "";
+                    for (int i = 0; i < dataGridView2.Columns.Count; i++)
                     {
-                        mailBody += "<td>" + cell.Value + "</td>";
+                        columnsHeader += "<td>" + dataGridView2.Columns[i].Name + "</td>";
                     }
-                    mailBody += "</tr>";
+                    mailBody += columnsHeader + "</td>";
+
+                    // Zeilen:
+                    foreach (DataGridViewRow row in dataGridView2.Rows)
+                    {
+                        mailBody += "<tr>";
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            mailBody += "<td>" + cell.Value + "</td>";
+                        }
+                        mailBody += "</tr>";
+                    }
+
+                    mailBody += "</table>";                    
+                    //your rest of the original code
+                    Email.Body = mailBody;
+
                 }
+
 
                 //20210920 - Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
-                if (dataGridView1.RowCount > 1)
+                else if (dataGridView1.RowCount > 1)
                 {
+                    //Ab Buchung Einkaufspreis GDI in Bestellung 
+
+                    //Empfänger hinzufügen - Wer noch außer EDV
+                    Email.To.Add("technik@riedgruppe-ost.de");
+                    //Email.To.Add("chiara.termini@riedgruppe-ost.de");
+
+                    //Nachrichtentext hinzufügen 
+                    mailBody += "Alte Version zur Kontrolle - kann irgendwann raus, wenn das andere korrekt ist -";
+                    //Nachrichtentext hinzufügen  
+                    mailBody += "<table width='100%' style='border:Solid 1px Black;'>";
+                    // Column headers
+                    string columnsHeader = "";
+                    for (int i = 0; i < dataGridView1.Columns.Count; i++)
+                    {
+                        columnsHeader += "<td>" + dataGridView1.Columns[i].Name + "</td>";
+                    }
+                    mailBody += columnsHeader + "</td>";
+
+                    // Zeilen:
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        mailBody += "<tr>";
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            mailBody += "<td>" + cell.Value + "</td>";
+                        }
+                        mailBody += "</tr>";
+                    }
+
                     mailBody += "</table>";
                     //your rest of the original code
                     Email.Body = mailBody;
-                    //Anhängen der Datei
-                    //Attachment attach = new Attachment(@"\\wbvro-lager01\GDI\Mindestbestand_CSV\Mindestbestand.csv");
-                    SmtpClient MailClient = new SmtpClient("mail.riedgruppe-ost.de", 25); // Postausgangsserver definieren
-                    //SmtpClient MailClient = new SmtpClient("192.168.0.93");
-                    MailClient.Credentials = new NetworkCredential("wbv@riedgruppe-ost.de", "Server2014!");   //Credentials; // Anmeldeinformationen setzen*/
-                    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                    MailClient.Send(Email); // Email senden      
                 }
+
+                else
+                {
+                    //Check ob Task ausgeführt für EDV
+                    //Empfänger hinzufügen
+                    //EDV ist oben drin weil die Mail immer kommen soll
+                    //Nachrichtentext hinzufügen  
+                    Email.Body = "Aufgabe ausgeführt";
+                }
+
+                //Mail senden
+                SmtpClient MailClient = new SmtpClient("mail.riedgruppe-ost.de", 25); // Postausgangsserver definieren
+                MailClient.Credentials = new NetworkCredential("edv@riedgruppe-ost.de", "Server2014!");   //Credentials; // Anmeldeinformationen setzen
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                MailClient.Send(Email); // Email senden
+
             }
+
+
             catch (SmtpException exeption)
             {
                 MessageBox.Show(exeption.Message);
             }
 
-            //Email versenden
-            MailMessage Email2 = new MailMessage();
-            //lager@riedgruppe-ost.de
-            MailAddress Sender2 = new MailAddress("lager@riedgruppe-ost.de");
-            // Absender einstellen 
-            Email2.From = Sender2;
-            // Empfänger hinzufügen
-            Email2.To.Add("edv@riedgruppe-ost.de");
-            // Betreff hinzufügen
-            Email2.Subject = "VK Preis - Aufgabe wurde ausgeführt";
-            // HTML Ansicht
-            Email2.IsBodyHtml = true;
-            // Nachrichtentext hinzufügen  
-            string mailBody2 = "Aufgabe wurde ausgeführt";
-            Email2.Body = mailBody2;
-            SmtpClient MailClient2 = new SmtpClient("mail.riedgruppe-ost.de", 25); // Postausgangsserver definieren
-                                                                                  //SmtpClient MailClient = new SmtpClient("192.168.0.93");
-            MailClient2.Credentials = new NetworkCredential("wbv@riedgruppe-ost.de", "Server2014!");   //Credentials; // Anmeldeinformationen setzen*/
-            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-            MailClient2.Send(Email2); // Email senden
+
 
             Application.Exit();
         }
