@@ -19,6 +19,7 @@ using System.Threading;
 
 
 //20210920 - Abfrage ob E-Mail erstellt wird. //Zeilen = 1 - dann nicht = Überschrift
+//20221122 - Nur Chiara als Empfänger
 
 
 namespace Preise_EK_VK
