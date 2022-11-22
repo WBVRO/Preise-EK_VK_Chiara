@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{AB5A88EE-B402-451F-8B24-0FB6B89E4C41}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Preise_EK_VK</RootNamespace>
-    <AssemblyName>Preise-EK_VK</AssemblyName>
+    <RootNamespace>Preise_EK_VK_Chiara</RootNamespace>
+    <AssemblyName>Preise-EK_VK_Chiara</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

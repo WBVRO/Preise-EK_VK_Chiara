@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Preise_EK_VK.Properties {
+namespace Preise_EK_VK_Chiara.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
