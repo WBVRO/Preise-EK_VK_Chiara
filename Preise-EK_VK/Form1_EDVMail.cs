@@ -142,13 +142,13 @@ namespace Preise_EK_VK
                 //MailBody
                 string mailBody = "";                
 
-                // Empfänger hinzufügen - EDV immer wegen Check ob Mail kommt
+                // Empfänger hinzufügen - EDV immer wegeb Check ob Mail kommt
                 Email.To.Add("edv@riedgruppe-ost.de");
 
                 if (dataGridView2.RowCount > 1)
                 {
                     //Empfänger hinzufügen - Wer noch außer EDV? 
-                    Email.To.Add("technik@riedgruppe-ost.de, markus.becker@riedgruppe-ost.de");
+                    Email.To.Add("technik@riedgruppe-ost.de");
                     //Email.To.Add("chiara.termini@riedgruppe-ost.de");
 
                     //Nachrichtentext hinzufügen  
